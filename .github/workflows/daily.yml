@@ -1,9 +1,10 @@
 name: Daily Random Word Video
 
 on:
-  workflow_dispatch: # Allow manual runs
+  workflow_dispatch:
   schedule:
-    - cron: "0 12 * * *" # Daily at 12:00 UTC
+    # Runs daily at 12:00 UTC. GitHub may start scheduled runs late.
+    - cron: "0 12 * * *"
 
 permissions:
   contents: read
@@ -40,14 +41,17 @@ jobs:
           import os
           from pathlib import Path
 
-          Path("client_secret.json").write_text(
-              os.environ["GOOGLE_CLIENT_SECRET_JSON"],
-              encoding="utf-8"
-          )
-          Path("token.json").write_text(
-              os.environ["GOOGLE_TOKEN_JSON"],
-              encoding="utf-8"
-          )
+          client_secret = os.environ.get("GOOGLE_CLIENT_SECRET_JSON", "")
+          token = os.environ.get("GOOGLE_TOKEN_JSON", "")
+
+          if not client_secret or not token:
+              raise SystemExit(
+                  "Missing GOOGLE_CLIENT_SECRET_JSON or GOOGLE_TOKEN_JSON "
+                  "in GitHub Actions repository secrets."
+              )
+
+          Path("client_secret.json").write_text(client_secret, encoding="utf-8")
+          Path("token.json").write_text(token, encoding="utf-8")
           PY
 
       - name: Generate video
